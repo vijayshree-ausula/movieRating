@@ -93,14 +93,19 @@ jobs:
         echo "EC2_PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
         echo "Public IP: $PUBLIC_IP"
 
+    - name: Write private key
+      run: |
+        echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
+        chmod 600 private_key.pem
+        
     # 🔟 Copy Docker image to EC2
     - name: Copy Docker image to EC2
-      run: scp -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY  }} movie-rating.tar ec2-user@${{ env.EC2_PUBLIC_IP }}:/home/ec2-user/
+      run: scp -o StrictHostKeyChecking=no -i private_key.pem movie-rating.tar ec2-user@${{ env.EC2_PUBLIC_IP }}:/home/ec2-user/
 
     # 1️⃣1️⃣ SSH into EC2 and run Docker container
     - name: Run Docker container on EC2
       run: |
-        ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY  }} ec2-user@${{ env.EC2_PUBLIC_IP }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} << 'EOF'
           sudo amazon-linux-extras install docker -y
           sudo service docker start
           sudo usermod -aG docker ec2-user
@@ -115,7 +120,7 @@ jobs:
       run: |
         echo "Waiting for app to be ready..."
         for i in {1..30}; do
-          STATUS=$(ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY  }} ec2-user@${{ env.EC2_PUBLIC_IP }} \
+          STATUS=$(ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} \
             "curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/actuator/health || echo '000'")
           if [ "$STATUS" == "200" ]; then
             echo "App is up!"

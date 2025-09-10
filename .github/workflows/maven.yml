@@ -52,6 +52,7 @@ jobs:
     - name: Check running container
       run: docker ps --filter name=movie-rating
   aws:
+    runs-on: ubuntu-latest
     steps:
     # 9 Configure AWS credentials
     - name: Configure AWS credentials

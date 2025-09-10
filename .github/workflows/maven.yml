@@ -68,7 +68,7 @@ jobs:
           --image-id ami-0945610b37068d87a \
           --count 1 \
           --instance-type t2.micro \
-          --key-name ${{ secrets.EC2_SSH_KEY  }} \
+          --key-name movie-rating \
           --security-group-ids sg-0cb5902487d9c70c8 \
           --subnet-id subnet-767ee810 \
           --query 'Instances[0].InstanceId' \

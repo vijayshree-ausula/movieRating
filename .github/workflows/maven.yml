@@ -45,8 +45,8 @@ jobs:
       run: docker build --no-cache -t movie-rating .
 
     # 7️⃣ Run Docker container
-    - name: Run Docker container
-      run: docker run --name movie-rating -p 8080:8080 movie-rating
+    # - name: Run Docker container
+    #   run: docker run --name movie-rating -p 8080:8080 movie-rating
 
     # 8️⃣ Verify container is running
     - name: Check running container

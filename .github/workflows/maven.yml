@@ -51,7 +51,7 @@ jobs:
     # 8 Verify container is running
     - name: Check running container
       run: docker ps --filter name=movie-rating
- aws:
+  aws:
     # 9 Configure AWS credentials
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2

@@ -1,0 +1,12 @@
+com/movierating/util/ExtractRating.class
+com/movierating/model/response/MovieDetail.class
+com/movierating/controller/MovieController.class
+com/movierating/util/WebScrapingTmbd.class
+com/movierating/config/annotation/ValidEmail.class
+com/movierating/service/impl/MovieServiceTMBD.class
+com/movierating/config/exception/GlobalExceptionHandler.class
+com/movierating/util/WebScraping.class
+com/movierating/service/impl/MovieService.class
+com/movierating/config/validator/CustomEmailValidator.class
+com/movierating/model/request/Email.class
+com/movierating/MovieRatingApplication.class

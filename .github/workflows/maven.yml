@@ -51,7 +51,7 @@ jobs:
     # 8 Verify container is running
     - name: Check running container
       run: docker ps --filter name=movie-rating
-
+ aws:
     # 9 Configure AWS credentials
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -68,7 +68,7 @@ jobs:
           --image-id ami-0945610b37068d87a \
           --count 1 \
           --instance-type t2.micro \
-          --key-name movie-rating \
+          --key-name movie-rating.pem \
           --security-group-ids sg-0cb5902487d9c70c8 \
           --subnet-id subnet-767ee810 \
           --query 'Instances[0].InstanceId' \

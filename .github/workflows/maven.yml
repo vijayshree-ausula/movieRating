@@ -1,0 +1,53 @@
+name: Build and Run Docker App
+
+on:
+  push:
+    branches: [ "main" ]   # or your desired branch
+  workflow_dispatch:
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1️⃣ Checkout repository
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # 2️⃣ Set up JDK 17
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: temurin
+        java-version: 17
+
+    # 3️⃣ Build Maven project
+    - name: Build with Maven
+      run: mvn clean package -DskipTests
+
+    # 4️⃣ Log in to Docker (if pushing to registry, optional)
+    # - name: Docker login
+    #   uses: docker/login-action@v2
+    #   with:
+    #     username: ${{ secrets.DOCKER_USERNAME }}
+    #     password: ${{ secrets.DOCKER_PASSWORD }}
+
+    # 5️⃣ Stop and remove old container (if exists)
+    - name: Stop and remove old container
+      run: |
+        if [ "$(docker ps -q -f name=movie-rating)" ]; then
+          docker stop movie-rating
+          docker rm movie-rating
+        fi
+
+    # 6️⃣ Build Docker image
+    - name: Build Docker image
+      run: docker build --no-cache -t movie-rating .
+
+    # 7️⃣ Run Docker container
+    - name: Run Docker container
+      run: docker run --name movie-rating -p 8080:8080 movie-rating
+
+    # 8️⃣ Verify container is running
+    - name: Check running container
+      run: docker ps --filter name=movierating-container

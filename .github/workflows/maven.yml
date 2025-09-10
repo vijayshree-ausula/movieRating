@@ -50,7 +50,7 @@ jobs:
 
     # 8 Verify container is running
     - name: Check running container
-      run: docker ps --filter name=movierating-container
+      run: docker ps --filter name=movie-rating
 
     # 9 Configure AWS credentials
     - name: Configure AWS credentials
@@ -58,19 +58,19 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+        aws-region: us-west-1
 
     # 7️⃣ Launch EC2 instance
     - name: Launch EC2 instance
       id: ec2
       run: |
         INSTANCE_ID=$(aws ec2 run-instances \
-          --image-id ami-0c02fb55956c7d316 \
+          --image-id ami-0945610b37068d87a \
           --count 1 \
           --instance-type t2.micro \
-          --key-name my-key-pair \
-          --security-group-ids sg-0123456789abcdef0 \
-          --subnet-id subnet-0abcdef1234567890 \
+          --key-name ${{ secrets.EC2_SSH_KEY  }} \
+          --security-group-ids sg-0cb5902487d9c70c8 \
+          --subnet-id subnet-767ee810 \
           --query 'Instances[0].InstanceId' \
           --output text)
         echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
@@ -92,19 +92,19 @@ jobs:
 
     # 🔟 Copy Docker image to EC2
     - name: Copy Docker image to EC2
-      run: scp -o StrictHostKeyChecking=no -i my-key.pem movierating.tar ec2-user@${{ env.EC2_PUBLIC_IP }}:/home/ec2-user/
+      run: scp -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY  }} movierating.tar ec2-user@${{ env.EC2_PUBLIC_IP }}:/home/ec2-user/
 
     # 1️⃣1️⃣ SSH into EC2 and run Docker container
     - name: Run Docker container on EC2
       run: |
-        ssh -o StrictHostKeyChecking=no -i my-key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} << 'EOF'
+        ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY  }} ec2-user@${{ env.EC2_PUBLIC_IP }} << 'EOF'
           sudo amazon-linux-extras install docker -y
           sudo service docker start
           sudo usermod -aG docker ec2-user
-          docker load -i movierating.tar
-          docker stop movierating-container || true
-          docker rm movierating-container || true
-          docker run -d --name movierating-container -p 8080:8080 movierating
+          docker load -i movie-rating.tar
+          docker stop movie-rating || true
+          docker rm movie-rating || true
+          docker run -d --name movie-rating -p 8080:8080 movie-rating
         EOF
 
     # 1️⃣2️⃣ Wait until Spring Boot app is up
@@ -112,7 +112,7 @@ jobs:
       run: |
         echo "Waiting for app to be ready..."
         for i in {1..30}; do
-          STATUS=$(ssh -o StrictHostKeyChecking=no -i my-key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} \
+          STATUS=$(ssh -o StrictHostKeyChecking=no -i ${{ secrets.EC2_SSH_KEY  }} ec2-user@${{ env.EC2_PUBLIC_IP }} \
             "curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/actuator/health || echo '000'")
           if [ "$STATUS" == "200" ]; then
             echo "App is up!"

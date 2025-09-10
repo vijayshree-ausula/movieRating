@@ -53,6 +53,7 @@ jobs:
       run: docker ps --filter name=movie-rating
   aws:
     runs-on: ubuntu-latest
+    needs: docker
     steps:
     # 9 Configure AWS credentials
     - name: Configure AWS credentials
@@ -70,7 +71,7 @@ jobs:
           --image-id ami-0945610b37068d87a \
           --count 1 \
           --instance-type t2.micro \
-          --key-name movie-rating.pem \
+          --key-name movie-rating \
           --security-group-ids sg-0cb5902487d9c70c8 \
           --subnet-id subnet-767ee810 \
           --query 'Instances[0].InstanceId' \

@@ -137,5 +137,5 @@ jobs:
           # Pull and run Docker image
           sudo docker stop movie-rating || true
           sudo docker rm movie-rating || true
-          sudo docker run -d --name movie-rating -p 8080:8080 ${{ env.IMAGE_URI }}
+          sudo docker run --name movie-rating -p 8080:8080 ${{ env.IMAGE_URI }}
         EOF

@@ -133,6 +133,10 @@ jobs:
 
           echo "Image Here: " ${{ env.IMAGE_URI }}
           sudo docker pull ${{ env.IMAGE_URI }}
+
+          aws ecr get-login-password --region us-west-1 \
+            | docker login --username AWS --password-stdin ${{ steps.ecr-login.outputs.registry }}
+          docker pull ${{ env.IMAGE_URI }}
           
           # Pull and run Docker image
           sudo docker stop movie-rating || true

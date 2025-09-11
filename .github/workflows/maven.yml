@@ -136,17 +136,17 @@ jobs:
           fi
 
           # Docker check
-          sudo docker --version
+          docker --version
             
           # Authenticate Docker to ECR inside EC2
           aws ecr get-login-password --region us-west-1 | sudo docker login --username AWS --password-stdin ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com
         
           echo "Image Here: " ${{ env.IMAGE_URI }}
-          sudo docker pull ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
+          docker pull ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
           
           # Pull and run Docker image
-          sudo docker stop movie-rating || true
-          sudo docker rm movie-rating || true
-          sudo docker run -d --name movie-rating -p 8080:8080 ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
+          docker stop movie-rating || true
+          docker rm movie-rating || true
+          docker run -d --name movie-rating -p 8080:8080 ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
                
         EOF

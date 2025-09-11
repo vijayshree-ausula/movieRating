@@ -126,6 +126,11 @@ jobs:
 
     - name: Get IMAGE_URI from previous job
       run: echo "IMAGE_URI=${{ needs.docker.outputs.image-uri }}"
+
+    # 5️⃣ Log in to ECR
+    - name: Login to Amazon ECR
+      id: ecr-login
+      uses: aws-actions/amazon-ecr-login@v2
       
     # 1️⃣4️⃣ SSH and run Docker container from ECR
     - name: Run Docker container on EC2 from ECR

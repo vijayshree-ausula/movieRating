@@ -47,6 +47,12 @@ jobs:
     # 7 Save Docker image as tar
     - name: Save Docker image
       run: docker save movie-rating -o movie-rating.tar
+      
+    - name: Upload Docker tar as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: docker-image
+        path: movie-rating.tar
 
     # 8 Verify container is running
     - name: Check running container
@@ -97,6 +103,11 @@ jobs:
       run: |
         echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
         chmod 600 private_key.pem
+
+    - name: Download Docker tar
+      uses: actions/download-artifact@v3
+      with:
+        name: docker-image
         
     # 🔟 Copy Docker image to EC2
     - name: Copy Docker image to EC2

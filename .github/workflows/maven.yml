@@ -47,7 +47,7 @@ jobs:
       run: |
         IMAGE_URI=${{ steps.ecr-login.outputs.registry }}/apps/movie-rating:latest
         docker tag movie-rating $IMAGE_URI
-        echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_OUTPUT
+        echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
 
     # 8️⃣ Push Docker image to ECR
     - name: Push Docker image to ECR

@@ -142,5 +142,5 @@ jobs:
           # Pull and run Docker image
           sudo docker stop movie-rating || true
           sudo docker rm movie-rating || true
-          sudo docker run --name movie-rating -p 8080:8080 ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
+          sudo docker -d run --name movie-rating -p 8080:8080 ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
         EOF

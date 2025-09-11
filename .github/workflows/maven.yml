@@ -114,7 +114,7 @@ jobs:
     # 1️⃣4️⃣ SSH and run Docker container from ECR
     - name: Run Docker container on EC2 from ECR
       run: |
-        ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} << EOF
+        ssh -tt -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} << 'EOF'
           
           # Install AWS CLI v2 if not present
           if ! command -v aws &> /dev/null; then

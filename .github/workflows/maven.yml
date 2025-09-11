@@ -45,7 +45,7 @@ jobs:
     # 7️⃣ Tag Docker image for ECR
     - name: Tag Docker image
       run: |
-        IMAGE_URI=${{ steps.ecr-login.outputs.registry }}/movie-rating:latest
+        IMAGE_URI=${{ steps.ecr-login.outputs.registry }}/apps/movie-rating:latest
         docker tag movie-rating $IMAGE_URI
         echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
 

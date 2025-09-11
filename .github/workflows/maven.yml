@@ -9,7 +9,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     outputs:
-      image-uri: ${{ steps.set-image-uri.outputs.image-uri }}
+      image-uri: ${{ steps.set-image-uri.outputs.image-ur
 
     steps:
     # 1️⃣ Checkout repository
@@ -46,10 +46,11 @@ jobs:
 
     # 7️⃣ Tag Docker image for ECR
     - name: Tag Docker image
+      id: set-image-uri
       run: |
         IMAGE_URI=${{ steps.ecr-login.outputs.registry }}/apps/movie-rating:latest
         docker tag movie-rating $IMAGE_URI
-        echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+        echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_OUTPUT
 
     # 8️⃣ Push Docker image to ECR
     - name: Push Docker image to ECR

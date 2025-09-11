@@ -118,33 +118,35 @@ jobs:
           
           # Install AWS CLI v2 if not present
           if ! command -v aws &> /dev/null; then
-            curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
-            unzip awscliv2.zip
-            sudo ./aws/install
+              curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
+              unzip awscliv2.zip
+              sudo ./aws/install
           fi
+          
+          # Identity
+          aws sts get-caller-identity
 
           # Install Docker
-            if ! command -v docker &> /dev/null; then
+          if ! command -v docker &> /dev/null; then
               # Amazon Linux 2023
               sudo dnf install -y docker
               sudo systemctl enable --now docker
               sudo service docker start
               sudo usermod -aG docker ec2-user
-            fi
+          fi
 
-            # Identity
-            aws sts get-caller-identity
+          # Docker check
+          docker --version
             
-            # Authenticate Docker to ECR inside EC2
-            aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com
+          # Authenticate Docker to ECR inside EC2
+          aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com
         
-              echo "Image Here: " ${{ env.IMAGE_URI }}
-              sudo docker pull ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
+          echo "Image Here: " ${{ env.IMAGE_URI }}
+          sudo docker pull ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
           
-          
-               # Pull and run Docker image
-               sudo docker stop movie-rating || true
-               sudo docker rm movie-rating || true
-               sudo docker run -d --name movie-rating -p 8080:8080 ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
+          # Pull and run Docker image
+          sudo docker stop movie-rating || true
+          sudo docker rm movie-rating || true
+          sudo docker run -d --name movie-rating -p 8080:8080 ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
                
         EOF

@@ -53,14 +53,6 @@ jobs:
     - name: Push Docker image to ECR
       run: docker push ${{ env.IMAGE_URI }}
 
-    # 9️⃣ Configure AWS credentials
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-west-1
-
     # 🔟 Launch EC2 instance
     - name: Launch EC2 instance
       id: ec2
@@ -100,6 +92,7 @@ jobs:
             sleep 10
           fi
         done
+        
     # 1️⃣3️⃣ Write private key
     - name: Write private key
       run: |
@@ -137,9 +130,6 @@ jobs:
             unzip awscliv2.zip
             sudo ./aws/install
           fi
-
-          # Login to ECR
-          aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin ${{ steps.ecr-login.outputs.registry }}
 
           echo "Image Here: " ${{ env.IMAGE_URI }}
           sudo docker pull ${{ env.IMAGE_URI }}

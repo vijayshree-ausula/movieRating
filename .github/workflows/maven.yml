@@ -77,6 +77,7 @@ jobs:
           --security-group-ids sg-0fb3ea68dfd79b75f \
           --subnet-id subnet-0b01643545bffbdc8 \
           --associate-public-ip-address \
+          --iam-instance-profile Name=movie-rating-ec2-ecr \
           --query 'Instances[0].InstanceId' \
           --output text)
         echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
@@ -143,10 +144,11 @@ jobs:
 
           # Login to ECR
           aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin ${{ steps.ecr-login.outputs.registry }}
-
+          
+          sudo docker pull ${{ env.IMAGE_URI }}
+          
           # Pull and run Docker image
-          docker stop movie-rating || true
-          docker rm movie-rating || true
-          docker pull ${{ env.IMAGE_URI }}
-          docker run -d --name movie-rating -p 8080:8080 ${{ env.IMAGE_URI }}
+          sudo docker stop movie-rating || true
+          sudo docker rm movie-rating || true
+          sudo docker run -d --name movie-rating -p 8080:8080 ${{ env.IMAGE_URI }}
         EOF

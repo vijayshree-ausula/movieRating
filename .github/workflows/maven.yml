@@ -9,7 +9,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     outputs:
-      image-uri: ${{ steps.set-image-uri.outputs.image-ur
+      image-uri: ${{ steps.set-image-uri.outputs.image-ur }}
 
     steps:
     # 1️⃣ Checkout repository

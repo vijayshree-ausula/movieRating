@@ -122,9 +122,6 @@ jobs:
               unzip awscliv2.zip
               sudo ./aws/install
           fi
-          
-          # Identity
-          aws sts get-caller-identity
 
           # Install Docker
           if ! command -v docker &> /dev/null; then

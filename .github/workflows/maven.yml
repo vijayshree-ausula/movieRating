@@ -109,6 +109,18 @@ jobs:
         echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
         chmod 600 private_key.pem
 
+    - name: Wait for SSH
+      run: |
+        for i in {1..30}; do
+          if nc -zv ${{ env.EC2_PUBLIC_IP }} 22; then
+            echo "SSH is ready!"
+            break
+          else
+            echo "Waiting for SSH..."
+            sleep 10
+          fi
+        done
+
     # 1️⃣4️⃣ SSH and run Docker container from ECR
     - name: Run Docker container on EC2 from ECR
       run: |

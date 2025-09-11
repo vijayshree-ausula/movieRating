@@ -123,13 +123,7 @@ jobs:
             sudo ./aws/install
           fi
 
-            # Identity
-            aws sts get-caller-identity
-            
-            # Authenticate Docker to ECR inside EC2
-            aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com
-           
-            # Install Docker
+          # Install Docker
             if ! command -v docker &> /dev/null; then
               # Amazon Linux 2023
               sudo dnf install -y docker
@@ -138,6 +132,12 @@ jobs:
               sudo usermod -aG docker ec2-user
             fi
 
+            # Identity
+            aws sts get-caller-identity
+            
+            # Authenticate Docker to ECR inside EC2
+            aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com
+        
               echo "Image Here: " ${{ env.IMAGE_URI }}
               sudo docker pull ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
           

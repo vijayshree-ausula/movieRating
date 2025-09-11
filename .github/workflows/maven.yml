@@ -139,7 +139,7 @@ jobs:
           docker --version
             
           # Authenticate Docker to ECR inside EC2
-          aws ecr get-login-password --region us-west-1 | sudo docker login --username AWS --password-stdin ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com
+          aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com
         
           echo "Image Here: " ${{ env.IMAGE_URI }}
           docker pull ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest

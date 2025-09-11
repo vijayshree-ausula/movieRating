@@ -135,7 +135,6 @@ jobs:
     # 1️⃣4️⃣ SSH and run Docker container from ECR
     - name: Run Docker container on EC2 from ECR
       run: |
-        
         ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} << EOF
           # Install Docker
           if ! command -v docker &> /dev/null; then
@@ -155,7 +154,8 @@ jobs:
 
           # Login to ECR
           aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin ${{ steps.ecr-login.outputs.registry }}
-          
+
+          echo "Image Here: " ${{ env.IMAGE_URI }}
           sudo docker pull ${{ env.IMAGE_URI }}
           
           # Pull and run Docker image

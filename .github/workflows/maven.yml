@@ -115,7 +115,14 @@ jobs:
     - name: Run Docker container on EC2 from ECR
       run: |
         ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} << EOF
-
+          
+          # Install AWS CLI v2 if not present
+          if ! command -v aws &> /dev/null; then
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+          fi
+          
           # Authenticate Docker to ECR inside EC2
           aws ecr get-login-password --region us-west-1 \
             | docker login --username AWS --password-stdin ${{ steps.ecr-login.outputs.registry }}
@@ -127,13 +134,6 @@ jobs:
             sudo systemctl enable --now docker
             sudo service docker start
             sudo usermod -aG docker ec2-user
-          fi
-
-          # Install AWS CLI v2 if not present
-          if ! command -v aws &> /dev/null; then
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
           fi
 
           echo "Image Here: " ${{ env.IMAGE_URI }}

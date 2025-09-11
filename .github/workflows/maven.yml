@@ -177,4 +177,3 @@ jobs:
         done
         echo "App did not start in time."
         exit 1
-

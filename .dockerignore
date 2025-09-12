@@ -1,0 +1,25 @@
+# Maven build output
+!.mvn/wrapper/maven-wrapper.jar
+
+# Maven specific files
+.settings/
+.classpath
+.project
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Git
+.git
+.gitignore

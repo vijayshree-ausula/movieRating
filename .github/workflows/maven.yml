@@ -149,7 +149,7 @@ jobs:
 
           sudo mkdir -p /var/log
           sudo touch /var/log/app_access.log
-          sudo chown ec2-user:ec2-user /var/log/app_access.log   # or the user your app runs as
+          sudo chown -R ec2-user:ec2-user /var/log/app_access.log   # or the user your app runs as
           sudo chmod 644 /var/log/app_access.log
 
           sudo yum install -y amazon-cloudwatch-agent

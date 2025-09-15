@@ -1,5 +1,14 @@
 FROM openjdk:17-jdk-slim
 
+# Create log directories and files
+RUN mkdir -p /var/log/myapp \
+    && touch /var/log/movie-rating/app.log \
+    && touch /var/log/movie-rating/app_access.log
+
+RUN chmod 777 /var/log/movie-rating
+# Set permissions (important for non-root user)
+RUN chown -R ec2-user:ec2-user /var/log/movie-rating
+
 WORKDIR /app
 COPY target/movierating-0.0.1-SNAPSHOT.jar app.jar
 

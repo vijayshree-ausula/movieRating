@@ -12,14 +12,11 @@ RUN chown -R ec2-user:ec2-user /app
 # Switch to the new user
 USER ec2-user
 
-# Create log directories and files
-RUN mkdir -p /app/logs/movie-rating \
-    && touch /app/logs/movie-rating/app.log \
-    && touch /app/logs/movie-rating/app_access.log
+#Make log directory
+RUN mkdir -p /var/log/tomcat
 
-RUN chmod 777 /app/logs/movie-rating/app_access.log
-# Set permissions (important for non-root user)
-RUN chown -R ec2-user:ec2-user /app/logs/movie-rating/app_access.log
+#Redirect logs to container stdout
+RUN ln -sf /dev/stdout /var/log/tomcat/access_log.log
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

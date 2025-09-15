@@ -146,5 +146,18 @@ jobs:
           docker stop movie-rating || true
           docker rm movie-rating || true
           docker run -d --name movie-rating -p 8080:8080 ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
-               
+
+          sudo mkdir -p /var/log
+          sudo touch /var/log/app_access.log
+          sudo chown ec2-user:ec2-user /var/log/app_access.log   # or the user your app runs as
+          sudo chmod 644 /var/log/app_access.log
+
+          sudo yum install -y amazon-cloudwatch-agent
+
+          sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+            -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
+
+          # check status:
+          sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status
+          
         EOF

@@ -145,7 +145,7 @@ jobs:
           sudo mkdir -p /var/log/tomcat
           sudo chmod 755 /var/log/tomcat
           sudo touch /var/log/tomcat/access_log.log
-          sudo chown ec2-user:ec2-user /var/log/tomcat/access.log   # or the user your app runs as
+          sudo chown ec2-user:ec2-user /var/log/tomcat/access_log.log   # or the user your app runs as
 
           if ! command -v amazon-cloudwatch-agent &> /dev/null; then
             sudo dnf install -y amazon-cloudwatch-agent
@@ -181,5 +181,11 @@ jobs:
             sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status
           fi
           sudo docker run -d --name movie-rating -p 8080:8080 -v /var/log/tomcat:/var/log/tomcat ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
-          
+
+          echo "Checking running containers..."
+          sudo docker ps -a
+
+          echo "Last logs from container:"
+          sudo docker logs --tail 50 movie-rating || true
+
         EOF

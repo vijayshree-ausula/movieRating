@@ -114,7 +114,7 @@ jobs:
     # 1️⃣4️⃣ SSH and run Docker container from ECR
     - name: Run Docker container on EC2 from ECR
       run: |
-        ssh -tt -o ServerAliveInterval=60 -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} << 'EOF'
+        ssh -tt -o ServerAliveInterval=60 -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} << EOF
           
           # Install AWS CLI v2 if not present
           if ! command -v aws &> /dev/null; then
@@ -128,11 +128,10 @@ jobs:
               # Amazon Linux 2023
               sudo dnf install -y docker
               sudo systemctl enable --now docker
-              sudo service docker start
               sudo systemctl status docker
-              sudo usermod -aG docker ec2-user
          
-              # Docker check
+              # Verify Docker is running
+              sudo systemctl is-active docker 
               sudo docker --version
            fi
         
@@ -149,12 +148,14 @@ jobs:
           sudo touch /var/log/app_access.log
           sudo chown ec2-user:ec2-user /var/log/app_access.log   # or the user your app runs as
 
-          sudo yum install -y amazon-cloudwatch-agent
+          if ! command -v amazon-cloudwatch-agent &> /dev/null; then
+            sudo yum install -y amazon-cloudwatch-agent
 
-          sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-            -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
+            sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+              -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
 
-          # check status:
-          sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status
+            # check status:
+            sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status
+          fi
           
         EOF

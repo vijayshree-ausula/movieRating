@@ -146,8 +146,8 @@ jobs:
         
           sudo mkdir -p /var/log/tomcat
           sudo chmod 755 /var/log/tomcat
-          sudo touch /var/log/tomcat/access_log.log
-          sudo chown ec2-user:ec2-user /var/log/tomcat/access_log.log   # or the user your app runs as
+          sudo touch /var/log/tomcat/access.log
+          sudo chown ec2-user:ec2-user /var/log/tomcat/access.log   # or the user your app runs as
 
           if ! command -v amazon-cloudwatch-agent &> /dev/null; then
             sudo dnf install -y amazon-cloudwatch-agent
@@ -164,7 +164,7 @@ jobs:
                      "files": {
                         "collect_list": [
                            {
-                              "file_path": "/var/log/tomcat/access_log.log",
+                              "file_path": "/var/log/tomcat/access.log",
                               "log_group_name": "/ec2/movie-rating/access",
                               "log_stream_name": "movie-rating-access",
                               "timestamp_format": "%Y-%m-%d %H:%M:%S"

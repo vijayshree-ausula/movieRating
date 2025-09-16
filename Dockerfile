@@ -14,7 +14,8 @@ COPY target/movierating-0.0.1-SNAPSHOT.jar app.jar
 USER root
 
 #Make log directory
-RUN mkdir -p /var/log/tomcat
+RUN mkdir -p /var/log/tomcat \
+    && chown -R root:root /var/log/tomcat
 
 #Redirect logs to container stdout
 RUN ln -sf /dev/stdout /var/log/tomcat/access_log.log

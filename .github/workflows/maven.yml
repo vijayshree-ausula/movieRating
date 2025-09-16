@@ -133,7 +133,11 @@ jobs:
               sudo usermod -aG docker ec2-user
          
               # Docker check
-              docker --version
+              sudo docker --version
+
+              # Logout from any existing Docker session
+              echo "🚪 Logging out from Docker/ECR"
+              sudo docker logout ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com || true
             
               # Authenticate Docker to ECR inside EC2
               aws ecr get-login-password --region us-west-1 | sudo docker login --username AWS --password-stdin ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com

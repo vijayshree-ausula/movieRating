@@ -138,11 +138,11 @@ jobs:
           aws ecr get-login-password --region us-west-1 | sudo docker login --username AWS --password-stdin 176526350605.dkr.ecr.us-west-1.amazonaws.com
         
           echo "Image Here: " ${{ env.IMAGE_URI }}
-          sudo docker pull ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
+          sudo docker pull ${{ env.IMAGE_URI }}
           
           # Pull and run Docker image
-          sudo docker stop movie-rating || true
-          sudo docker rm movie-rating || true
+          sudo docker stop ${{ env.IMAGE_URI }} || true
+          sudo docker rm ${{ env.IMAGE_URI }} || true
         
           sudo mkdir -p /var/log/tomcat
           sudo chmod 755 /var/log/tomcat
@@ -182,7 +182,7 @@ jobs:
             # check status:
             sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status
           fi
-          sudo docker run -d --name movie-rating -p 8080:8080 -v /var/log/tomcat:/var/log/tomcat ${{ secrets.ACCOUNT_ID }}.dkr.ecr.us-west-1.amazonaws.com/movie-rating:latest
+          sudo docker run -d --name movie-rating -p 8080:8080 -v /var/log/tomcat:/var/log/tomcat ${{ env.IMAGE_URI }}
 
           echo "Checking running containers..."
           sudo docker ps -a

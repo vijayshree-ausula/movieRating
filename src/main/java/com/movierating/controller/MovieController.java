@@ -4,10 +4,12 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.movierating.model.response.MovieDetail;
 import com.movierating.service.impl.MovieService;
@@ -35,7 +37,11 @@ public class MovieController {
 	@GetMapping("/movieName")
 	public List<MovieDetail> getMovieRatingImdb(@RequestParam(name = "name", required = true) String movieName) throws Exception {
 		
-		return movieServiceTmbd.getMovieRating(movieName);
+		List<MovieDetail> response = movieServiceTmbd.getMovieRating(movieName);
+		if(response.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie not found");
+		}
+		return response;
 		
 	}
 

@@ -1,193 +1,52 @@
-name: Build and Push Docker App to ECR
+name: Build and Deploy to EC2 with Terraform
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:
+    branches:
+      - main
 
 jobs:
-  docker:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Checkout repository
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # 1. Checkout repo
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    # 2️⃣ Set up JDK 17
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        distribution: temurin
-        java-version: 17
+      # 2. Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-1   # match your provider region
 
-    # 3️⃣ Build Maven project
-    - name: Build with Maven
-      run: mvn clean package -DskipTests
+      # 3. Login to Amazon ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-    # 4️⃣ Configure AWS credentials
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-west-1
+      # 4. Build and push Docker image
+      - name: Build, Tag, and Push Docker image
+        run: |
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/movie-rating:latest
+          docker build -t $IMAGE_URI .
+          docker push $IMAGE_URI
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
 
-    # 5️⃣ Log in to ECR
-    - name: Login to Amazon ECR
-      id: ecr-login
-      uses: aws-actions/amazon-ecr-login@v2
+      # 5. Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
 
-    # 6️⃣ Build Docker image
-    - name: Build Docker image
-      run: docker build -t movie-rating .
+      # 6. Terraform Init & Apply (pass IMAGE_URI to user_data)
+      - name: Terraform Init
+	  	working-directory: infra
+        run: terraform init
 
-    # 7️⃣ Tag Docker image for ECR
-    - name: Tag Docker image
-      run: |
-        IMAGE_URI=${{ steps.ecr-login.outputs.registry }}/movie-rating:latest
-        docker tag movie-rating $IMAGE_URI
-        echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
-
-    # 8️⃣ Push Docker image to ECR
-    - name: Push Docker image to ECR
-      run: docker push ${{ env.IMAGE_URI }}
-
-    # 🔟 Launch EC2 instance
-    - name: Launch EC2 instance
-      id: ec2
-      run: |
-        INSTANCE_ID=$(aws ec2 run-instances \
-          --image-id ami-0945610b37068d87a \
-          --count 1 \
-          --instance-type t2.micro \
-          --key-name movie-rating \
-          --security-group-ids sg-0fb3ea68dfd79b75f \
-          --subnet-id subnet-0b01643545bffbdc8 \
-          --associate-public-ip-address \
-          --iam-instance-profile Name=movie-rating-ec2-ecr \
-          --query 'Instances[0].InstanceId' \
-          --output text)
-        echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
-
-    # 1️⃣1️⃣ Wait for EC2
-    - name: Wait for EC2
-      run: aws ec2 wait instance-running --instance-ids ${{ env.INSTANCE_ID }}
-
-    # 1️⃣2️⃣ Get EC2 public IP
-    - name: Get EC2 public IP
-      run: |
-        for i in {1..30}; do
-          PUBLIC_IP=$(aws ec2 describe-instances \
-            --instance-ids ${{ env.INSTANCE_ID }} \
-            --query 'Reservations[0].Instances[0].PublicIpAddress' \
-            --output text)
-
-          if [ "$PUBLIC_IP" != "None" ]; then
-            echo "EC2_PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
-            echo "Public IP: $PUBLIC_IP"
-            break
-          else
-            echo "Waiting for Public IP..."
-            sleep 10
-          fi
-        done
-        
-    # 1️⃣3️⃣ Write private key
-    - name: Write private key
-      run: |
-        echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
-        chmod 600 private_key.pem
-
-    - name: Wait for SSH
-      run: |
-        for i in {1..30}; do
-          if nc -zv ${{ env.EC2_PUBLIC_IP }} 22; then
-            echo "SSH is ready!"
-            break
-          else
-            echo "Waiting for SSH..."
-            sleep 10
-          fi
-        done
-      
-    # 1️⃣4️⃣ SSH and run Docker container from ECR
-    - name: Run Docker container on EC2 from ECR
-      run: |
-        ssh -tt -o ServerAliveInterval=60 -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ env.EC2_PUBLIC_IP }} << EOF
-          
-          # Install AWS CLI v2 if not present
-          if ! command -v aws &> /dev/null; then
-              sudo curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip
-              sudo unzip awscliv2.zip
-              sudo ./aws/install
-          fi
-
-          # Install Docker
-          if ! command -v docker &> /dev/null; then
-              # Amazon Linux 2023
-              sudo dnf install -y docker
-              sudo systemctl enable --now docker
-              sudo systemctl status docker
-         
-              # Verify Docker is running
-              sudo systemctl is-active docker 
-              sudo docker --version
-           fi
-
-          aws ecr get-login-password --region us-west-1 | sudo docker login --username AWS --password-stdin 176526350605.dkr.ecr.us-west-1.amazonaws.com
-        
-          echo "Image Here: " ${{ env.IMAGE_URI }}
-          sudo docker pull ${{ env.IMAGE_URI }}
-          
-          # Pull and run Docker image
-          sudo docker stop ${{ env.IMAGE_URI }} || true
-          sudo docker rm ${{ env.IMAGE_URI }} || true
-        
-          sudo mkdir -p /var/log/tomcat
-          sudo chmod 755 /var/log/tomcat
-          sudo touch /var/log/tomcat/access.log
-          sudo chown ec2-user:ec2-user /var/log/tomcat/access.log   # or the user your app runs as
-
-          if ! command -v amazon-cloudwatch-agent &> /dev/null; then
-            sudo dnf install -y amazon-cloudwatch-agent
-
-            # Create CloudWatch config file on EC2
-            cat <<'EOT' | sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-            {
-              "agent": {
-                  "metrics_collection_interval": 60,
-                  "run_as_user": "root"
-              },
-              "logs": {
-                  "logs_collected": {
-                     "files": {
-                        "collect_list": [
-                           {
-                              "file_path": "/var/log/tomcat/access.log",
-                              "log_group_name": "/ec2/movie-rating/access",
-                              "log_stream_name": "movie-rating-access",
-                              "timestamp_format": "%Y-%m-%d %H:%M:%S"
-                            }
-                          ]
-                        }
-                      }
-                    }
-                  }
-                  EOT
-            
-            sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-              -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
-
-            # check status:
-            sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status
-          fi
-          sudo docker run -d --name movie-rating -p 8080:8080 -v /var/log/tomcat:/var/log/tomcat ${{ env.IMAGE_URI }}
-
-          echo "Checking running containers..."
-          sudo docker ps -a
-
-          echo "Last logs from container:"
-          sudo docker logs --tail 50 movie-rating || true
-
-        EOF
+      - name: Terraform Apply
+	  	working-directory: infra
+        run: terraform apply -auto-approve -input=false -var="image_uri=${{ env.IMAGE_URI }}"
+	  # Later change  ${{ env.IMAGE_URI }} to pass git SHA instead of latest and make changes accordingly in main.tf

@@ -41,12 +41,14 @@ jobs:
         with:
           terraform_version: 1.9.5
 
-      # 6. Terraform Init & Apply (pass IMAGE_URI to user_data)
+		  # 6. Terraform Init & Apply (pass IMAGE_URI to user_data)
 	  - name: Terraform Init
-	  	working-directory: infra
-        run: terraform init
+		working-directory: /infra
+		run: terraform init
 
 	  - name: Terraform Apply
-	  	working-directory: infra
-        run: terraform apply -auto-approve -input=false -var="image_uri=${{ env.IMAGE_URI }}"
-	  # Later change  ${{ env.IMAGE_URI }} to pass git SHA instead of latest and make changes accordingly in main.tf
+		working-directory: /infra
+		run: terraform apply -auto-approve -input=false -var="image_uri=${{ env.IMAGE_URI }}"
+
+		  # 🔜 Later: switch ${{ env.IMAGE_URI }} to use a unique tag (like git SHA) 
+		  # and update your main.tf to consume it instead of always using :latest

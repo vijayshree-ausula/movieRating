@@ -13,13 +13,6 @@ provider "aws" {
 }
 
 # ------------------------------
-# 1️⃣ ECR Repository
-# ------------------------------
-resource "aws_ecr_repository" "movie_rating" {
-  name = "movie-rating"
-}
-
-# ------------------------------
 # 2️⃣ Security Group
 # ------------------------------
 resource "aws_security_group" "movie_rating_sg" {

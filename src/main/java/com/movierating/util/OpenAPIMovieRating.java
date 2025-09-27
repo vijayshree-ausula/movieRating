@@ -16,7 +16,8 @@ public class OpenAPIMovieRating {
 
     public OpenAPIMovieRating() {
         String apiKey = System.getenv("OPENAI_API_KEY");
-        openAiService = new OpenAiService(apiKey);
+//        openAiService = new OpenAiService(apiKey);
+        openAiService = null;
     }
 
     public MovieRating getMovieRating(String movieName, String year) {

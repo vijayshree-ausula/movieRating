@@ -13,64 +13,24 @@ provider "aws" {
 }
 
 # ------------------------------
+# 1️⃣ ECR Repository
+# ------------------------------
+data "aws_ecr_repository" "movie_rating" {
+  name = "movie-rating"
+}
+
+# ------------------------------
 # 2️⃣ Security Group
 # ------------------------------
-resource "aws_security_group" "movie_rating_sg" {
-  name        = "movie-rating-sg"
-  description = "Allow SSH and HTTP access"
-  vpc_id      = "vpc-004137fec3f57c719" # Replace with your VPC ID
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+data "aws_security_group" "movie_rating_sg" {
+  id = "sg-0fb3ea68dfd79b75f" # existing SG ID
 }
 
 # ------------------------------
 # 3️⃣ IAM Role for EC2
 # ------------------------------
-resource "aws_iam_role" "ec2_role" {
+data "aws_iam_role" "ec2_role" {
   name = "movie-rating-ec2-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action    = "sts:AssumeRole"
-      Effect    = "Allow"
-      Principal = { Service = "ec2.amazonaws.com" }
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ecr_access" {
-  role       = aws_iam_role.ec2_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess"
-}
-
-resource "aws_iam_role_policy_attachment" "cw_logs" {
-  role       = aws_iam_role.ec2_role.name
-  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
-}
-
-resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "movie-rating-ec2-ecr"
-  role = aws_iam_role.ec2_role.name
 }
 
 # ------------------------------
@@ -124,7 +84,6 @@ resource "aws_instance" "movie_rating" {
 # ------------------------------
 # 5️⃣ CloudWatch Log Group
 # ------------------------------
-resource "aws_cloudwatch_log_group" "movie_rating" {
-  name              = "/ec2/movie-rating/access"
-  retention_in_days = 7
+data "aws_cloudwatch_log_group" "movie_rating" {
+  name = "/ec2/movie-rating/access"
 }

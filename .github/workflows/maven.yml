@@ -30,9 +30,13 @@ jobs:
       # 4. Build and push Docker image
       - name: Build, Tag, and Push Docker image
         run: |
-          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/movie-rating:latest
-          docker build -t $IMAGE_URI .
+          IMAGE_TAG=${{ github.sha }}
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/movie-rating:$IMAGE_TAG
+          LATEST_URI=${{ steps.login-ecr.outputs.registry }}/movie-rating:latest
+
+          docker build -t $IMAGE_URI -t $LATEST_URI .
           docker push $IMAGE_URI
+          docker push $LATEST_URI
           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
 
       # 5. Setup Terraform

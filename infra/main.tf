@@ -116,6 +116,7 @@ resource "aws_instance" "movie_rating" {
               sudo aws ecr get-login-password --region $REGION | sudo docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
 
               # Pull and run Docker image
+              IMAGE_URI="${var.image_uri}"
               sudo docker pull $IMAGE_URI
               sudo docker stop movie-rating || true
               sudo docker rm movie-rating || true

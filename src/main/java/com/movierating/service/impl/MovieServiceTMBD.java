@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.movierating.model.response.MovieDetail;
-import com.movierating.util.ExtractRating;
-import com.movierating.util.WebScraping;
 import com.movierating.util.WebScrapingTmbd;
 
 import lombok.RequiredArgsConstructor;
@@ -18,15 +18,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MovieServiceTMBD {
 
-	@Autowired 
+	@Autowired
 	WebScrapingTmbd webScrapingTmbd;
-	
+
 	public List<MovieDetail> getMovieRating(String movieName) throws Exception {
-		Set<MovieDetail> webScrapingresponse =  webScrapingTmbd.getMovieRating(movieName);
+		Set<MovieDetail> webScrapingresponse = webScrapingTmbd.getMovieRating(movieName);
 		List<MovieDetail> response = new ArrayList<>();
 		response.addAll(webScrapingresponse);
 		return response;
 	}
 
 }
-

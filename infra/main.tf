@@ -29,8 +29,8 @@ data "aws_security_group" "movie_rating_sg" {
 # ------------------------------
 # 3️⃣ IAM Role for EC2
 # ------------------------------
-data "aws_iam_role" "ec2_role" {
-  name = "movie-rating-ec2-role"
+data "aws_iam_instance_profile" "ec2_profile" {
+  name = "movie-rating-ec2-ecr"
 }
 
 # ------------------------------
@@ -41,9 +41,9 @@ resource "aws_instance" "movie_rating" {
   instance_type               = "t3.large"
   key_name                    = "movie-rating" # Replace with your key pair
   subnet_id                   = "subnet-0b01643545bffbdc8" # Replace with your subnet
-  vpc_security_group_ids      = [aws_security_group.movie_rating_sg.id]
+  vpc_security_group_ids      = [data.aws_security_group.movie_rating_sg.id]
   associate_public_ip_address = true
-  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
+  iam_instance_profile        = data.aws_iam_instance_profile.ec2_profile.name
 
   user_data = <<-EOF
               #!/bin/bash

@@ -58,10 +58,7 @@ resource "aws_instance" "movie_rating" {
   done
               
   dnf update -y
-
-  # Install Docker (Amazon Linux 2023 uses moby-engine + moby-cli)
-  #dnf install -y moby-engine moby-cli
-  
+ 
   dnf install -y docker
 			  
   # Enable and start Docker
@@ -75,9 +72,9 @@ resource "aws_instance" "movie_rating" {
   usermod -aG docker ec2-user
   
   # Create log directory on host
-  mkdir -p /var/log/movie-rating
-  touch /var/log/movie-rating/access.log
-  chown ec2-user:ec2-user /var/log/movie-rating/access.log
+  mkdir -p /var/log/tomcat
+  touch /var/log/tomcat/access.log
+  chown ec2-user:ec2-user /var/log/tomcat/access.log
 
   # Install AWS CLI v2
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -110,7 +107,7 @@ resource "aws_instance" "movie_rating" {
           "files": {
             "collect_list": [
               {
-                "file_path": "/var/log/movie-rating/access.log",
+                "file_path": "/var/log/tomcat/access.log",
                 "log_group_name": "/ec2/movie-rating/access",
                 "log_stream_name": "movie-rating-access",
                 "timezone": "UTC"
@@ -131,7 +128,7 @@ resource "aws_instance" "movie_rating" {
   systemctl enable amazon-cloudwatch-agent
   systemctl start amazon-cloudwatch-agent
 
-  docker run -d --name movie-rating --restart unless-stopped -p 8080:8080 -v /var/log/movie-rating:/var/log/tomcat $IMAGE_URI
+  docker run -d --name movie-rating --restart unless-stopped -p 8080:8080 -v /var/log/tomcat:/var/log/tomcat $IMAGE_URI
   EOF
 
   tags = {

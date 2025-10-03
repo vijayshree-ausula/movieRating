@@ -37,7 +37,8 @@ data "aws_iam_instance_profile" "ec2_profile" {
 # 4️⃣ EC2 Instance
 # ------------------------------
 resource "aws_instance" "movie_rating" {
-  ami                         = "ami-0945610b37068d87a" # Amazon Linux 2023
+  #ami                         = "ami-0945610b37068d87a" # Amazon Linux 2023
+  ami                         = "ami-00142eb1747a493d9" # Amazon Linux 2023 kernel-6.1 AMI
   instance_type               = "t3.large"
   key_name                    = "movie-rating" # Replace with your key pair
   subnet_id                   = "subnet-0b01643545bffbdc8" # Replace with your subnet
@@ -46,35 +47,92 @@ resource "aws_instance" "movie_rating" {
   iam_instance_profile        = data.aws_iam_instance_profile.ec2_profile.name
 
   user_data = <<-EOF
-              #!/bin/bash
-              sudo dnf update -y
+  #!/bin/bash
+  set -euxo pipefail
+  exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+              
+  # Wait for network to be ready
+  until ping -c1 amazon.com &>/dev/null; do
+    echo "Waiting for network..."
+    sleep 5
+  done
+              
+  dnf update -y
 
-              # Install Docker
-              sudo dnf install -y docker
-			  sudo systemctl enable docker
-			  sudo systemctl start docker
+  # Install Docker (Amazon Linux 2023 uses moby-engine + moby-cli)
+  #dnf install -y moby-engine moby-cli
+  
+  dnf install -y docker
 			  
-			  # Verify Docker is running
-              sudo systemctl is-active docker 
+  # Enable and start Docker
+  systemctl enable docker
+  systemctl start docker
+			  
+  # Verify Docker is running
+  systemctl is-active docker 
+              
+  # Add ec2-user to docker group
+  usermod -aG docker ec2-user
+  
+  # Create log directory on host
+  mkdir -p /var/log/movie-rating
+  touch /var/log/movie-rating/access.log
+  chown ec2-user:ec2-user /var/log/movie-rating/access.log
 
-              # Install AWS CLI v2
-              sudo curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-              sudo unzip awscliv2.zip
-              sudo ./aws/install
+  # Install AWS CLI v2
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  unzip awscliv2.zip
+  ./aws/install
 
-              # Login to ECR
-              REGION="us-west-1"
-              ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-              IMAGE_URI=$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/movie-rating:latest
-              sudo aws ecr get-login-password --region $REGION | sudo docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
+  # Login to ECR
+  REGION="us-west-1"
+  ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+  IMAGE_URI=$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/movie-rating:latest
+  aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
 
-              # Pull and run Docker image
-              IMAGE_URI="${var.image_uri}"
-              sudo docker pull $IMAGE_URI
-              sudo docker stop movie-rating || true
-              sudo docker rm movie-rating || true
-              sudo docker run -d --name movie-rating -p 8080:8080 $IMAGE_URI
-              EOF
+  # Pull and run Docker image
+  docker pull $IMAGE_URI
+  docker stop movie-rating || true
+  docker rm movie-rating || true
+            
+  # Install CloudWatch Agent
+  dnf install -y amazon-cloudwatch-agent
+
+  # Write CloudWatch Agent config
+  cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json <<CWCONF
+  {
+      "agent": {
+            "metrics_collection_interval": 60,
+            "run_as_user": "ec2-user"
+      },
+      "logs": {
+        "logs_collected": {
+          "files": {
+            "collect_list": [
+              {
+                "file_path": "/var/log/movie-rating/access.log",
+                "log_group_name": "/ec2/movie-rating/access",
+                "log_stream_name": "movie-rating-access",
+                "timezone": "UTC"
+              }
+            ]
+          }
+       }
+    }
+  }
+  CWCONF
+
+  # Start CloudWatch Agent with config
+  /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+      -a fetch-config -m ec2 \
+      -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json \
+      -s
+      
+  systemctl enable amazon-cloudwatch-agent
+  systemctl start amazon-cloudwatch-agent
+
+  docker run -d --name movie-rating --restart unless-stopped -p 8080:8080 -v /var/log/movie-rating:/var/log/tomcat $IMAGE_URI
+  EOF
 
   tags = {
     Name = "movie-rating"

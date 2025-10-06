@@ -18,7 +18,7 @@ RUN mkdir -p /var/log/tomcat \
     && chown -R root:root /var/log/tomcat
 
 #Redirect logs to container stdout
-RUN ln -sf /dev/stdout /var/log/tomcat/access_log.log
+RUN ln -sf /dev/stdout /var/log/tomcat/access.log
 
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

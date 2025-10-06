@@ -21,4 +21,4 @@ RUN mkdir -p /var/log/tomcat \
 RUN ln -sf /dev/stdout /var/log/tomcat/access.log
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -jar app.jar | tee -a /var/log/tomcat/access.log"]

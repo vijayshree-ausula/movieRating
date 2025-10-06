@@ -33,13 +33,18 @@ data "aws_iam_instance_profile" "ec2_profile" {
   name = "movie-rating-ec2-ecr"
 }
 
+# Reference your already allocated EIP
+data "aws_eip" "existing_eip" {
+  id = "eipalloc-00061aeaf66469108"  # replace with your EIP Allocation ID
+}
+
 # ------------------------------
 # 4️⃣ EC2 Instance
 # ------------------------------
 resource "aws_instance" "movie_rating" {
   #ami                         = "ami-0945610b37068d87a" # Amazon Linux 2023
   ami                         = "ami-00142eb1747a493d9" # Amazon Linux 2023 kernel-6.1 AMI
-  instance_type               = "t3.large"
+  instance_type               = "t2.micro"
   key_name                    = "movie-rating" # Replace with your key pair
   subnet_id                   = "subnet-0b01643545bffbdc8" # Replace with your subnet
   vpc_security_group_ids      = [data.aws_security_group.movie_rating_sg.id]
@@ -70,11 +75,6 @@ resource "aws_instance" "movie_rating" {
               
   # Add ec2-user to docker group
   usermod -aG docker ec2-user
-  
-  # Create log directory on host
-  mkdir -p /var/log/tomcat
-  touch /var/log/tomcat/access.log
-  chown ec2-user:ec2-user /var/log/tomcat/access.log
 
   # Install AWS CLI v2
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -91,6 +91,12 @@ resource "aws_instance" "movie_rating" {
   docker pull $IMAGE_URI
   docker stop movie-rating || true
   docker rm movie-rating || true
+
+  # Create log directory on host
+  mkdir -p /var/log/tomcat
+  touch /var/log/tomcat/access.log
+  chown ec2-user:ec2-user /var/log/tomcat/access.log
+  sudo chmod 755 /var/log/tomcat/access.log
             
   # Install CloudWatch Agent
   dnf install -y amazon-cloudwatch-agent
@@ -134,6 +140,11 @@ resource "aws_instance" "movie_rating" {
   tags = {
     Name = "movie-rating"
   }
+}
+
+resource "aws_eip_association" "movie_rating_eip_assoc" {
+  instance_id   = aws_instance.movie_rating.id
+  allocation_id = data.aws_eip.existing_eip.id
 }
 
 # ------------------------------

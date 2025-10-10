@@ -26,6 +26,14 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+		
+		# 4. Setup Java & Maven
+	  - name: Set up JDK 17
+		uses: actions/setup-java@v4
+		with:
+		  distribution: 'temurin'
+		  java-version: '17'
+		  cache: 'maven'
 
       # 4. Build and push Docker image
       - name: Build, Tag, and Push Docker image

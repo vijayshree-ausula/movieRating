@@ -38,8 +38,6 @@ jobs:
       # 4. Build and push Docker image
       - name: Build, Tag, and Push Docker image
         run: |
-          mvn clean package
-		  
           IMAGE_TAG=${{ github.sha }}
           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/movie-rating:$IMAGE_TAG
           LATEST_URI=${{ steps.login-ecr.outputs.registry }}/movie-rating:latest

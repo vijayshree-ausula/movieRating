@@ -20,7 +20,7 @@ USER ec2-user
 
 
 #Redirect logs to container stdout
-#RUN ln -sf /dev/stdout /var/log/tomcat/access.log
+RUN ln -sf /dev/stdout /var/log/tomcat/access.log
 
 EXPOSE 8080
 #ENTRYPOINT ["sh", "-c", "java -jar app.jar | tee -a /var/log/tomcat/access.log"]

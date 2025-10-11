@@ -134,7 +134,7 @@ resource "aws_instance" "movie_rating" {
   systemctl enable amazon-cloudwatch-agent
   systemctl start amazon-cloudwatch-agent
 
-  docker run -d --name movie-rating --restart unless-stopped -p 8080:8080 -v /var/log/tomcat:/var/log/tomcat $IMAGE_URI
+  docker run -d --name movie-rating --restart unless-stopped -p 8080:8080 $IMAGE_URI
   EOF
 
   tags = {

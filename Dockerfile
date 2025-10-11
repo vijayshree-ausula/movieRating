@@ -10,12 +10,12 @@ COPY target/movierating-0.0.1-SNAPSHOT.jar app.jar
 # RUN chown -R ec2-user:ec2-user /app
 
 # Switch to the new user
-# USER ec2-user
-USER root
+USER ec2-user
+#USER root
 
 #Make log directory
 RUN mkdir -p /var/log/tomcat \
-    && chown -R root:root /var/log/tomcat
+    && chown -R ec2-user:ec2-user /var/log/tomcat
 
 #Redirect logs to container stdout
 #RUN ln -sf /dev/stdout /var/log/tomcat/access.log
